@@ -1,10 +1,12 @@
+tool
 extends Resource
 class_name ZoneMapData
 
 # -----------------------------------------------------------------------------
 # Signals
 # -----------------------------------------------------------------------------
-
+signal zone_added(new_zone_index)
+signal zone_removed(new_zone_index)
 
 # -----------------------------------------------------------------------------
 # ENUMs
@@ -27,6 +29,7 @@ var _dirty : bool = false
 var _texture_blocks_across : int = 0
 var _texture_blocks_down : int = 0
 var _texture_blocks_total : int = 0
+
 
 
 # -----------------------------------------------------------------------------
@@ -55,17 +58,13 @@ func set_pix_size(ps : int) -> void:
 # -----------------------------------------------------------------------------
 # Override Methods
 # -----------------------------------------------------------------------------
-func _ready():
+func _init():
 	pass
 
 
 # -----------------------------------------------------------------------------
 # Private Methods
 # -----------------------------------------------------------------------------
-func _SetDirty() -> void:
-	_dirty = true
-	emit_changed()
-
 func _RecalculateTextureBlocks() -> void:
 	if texture != null and pix_size > 0:
 		var tsize = texture.get_size()
@@ -76,15 +75,6 @@ func _RecalculateTextureBlocks() -> void:
 		_texture_blocks_down = 0
 	_texture_blocks_total = _texture_blocks_across * _texture_blocks_down
 
-
-func _GetZoneDimension(zidx : int) -> Dictionary:
-	if zidx >= 0 and zidx < _Map.size():
-		return {
-			"floor": _Map[zidx]["floor"],
-			"ceiling": _Map[zidx]["ceiling"],
-			"height": _Map[zidx]["ceiling"] - _Map[zidx]["floor"]
-		}
-	return {height = -1}
 
 func _GetOverlappingZoneNear(zidx : int, tposition : Vector2, include_self : bool = false) -> int:
 	if zidx >= 0 and zidx < _Map.size():
@@ -99,6 +89,17 @@ func _GetOverlappingZoneNear(zidx : int, tposition : Vector2, include_self : boo
 				# the ceiling of this zone, then there's no way for an overlap from this point on.
 				break
 	return -1
+
+func _RecalculateZoneRect(zidx : int) -> void:
+	if zidx >= 0 and zidx < _Map.size():
+		var rect : Rect2 = Rect2()
+		for key in _Map[zidx].tiles.keys():
+			var trect : Rect2 = Rect2(key, Vector2(1,1))
+			if rect.has_no_area():
+				rect = trect
+			else:
+				rect = rect.merge(trect)
+		_Map[zidx].rect = rect 
 
 func _UpdateWallVisibility(zidx : int, tposition : Vector2, wall : int) -> void:
 	var ztile = null
@@ -128,22 +129,32 @@ func _UpdateWallVisibility(zidx : int, tposition : Vector2, wall : int) -> void:
 			ztile.w[wall].o = [0, 0, 0]
 			if ztile.w[wall].tid < 0:
 				ztile.w[wall].tid = 0
-			_SetDirty()
 	else:
-		var dirty = false
 		var otile = _Map[oidx].tiles[oposition]
-		if zidx == oidx:
-			dirty = true
-			otile.w[owall].c = ztile == null
-			if ztile == null:
-				otile.w[owall].o = [0, 0, 0]
-			else:
+		if ztile == null:
+			otile.w[owall].c = true
+			otile.w[owall].o = [0, 0, 0]
+		else:
+			if zidx == oidx:
+				otile.w[owall].c = false
 				otile.w[owall].o = [-1,-1,-1]
 				ztile.w[wall].c = false
 				ztile.w[wall].o = [-1,-1,-1]
-		else:
-			pass # TODO: Either figure out which edges are enabled based on the difference
-			# in height between the two zones... or move the wall into it's own resource?
+			else:
+				ztile.w[wall].c = false
+				ztile.w[wall].o = [
+					-1,
+					0 if _Map[oidx].ceiling < _Map[zidx].ceiling else -1,
+					0 if _Map[oidx].floor > _Map[zidx].floor else -1
+				]
+				otile.w[owall].c = false
+				otile.w[owall].o = [
+					-1,
+					0 if _Map[zidx].ceiling < _Map[oidx].ceiling else -1,
+					0 if _Map[zidx].floor > _Map[oidx].floor else -1
+				]
+				
+		_dirty = true
 
 # -----------------------------------------------------------------------------
 # Public Methods
@@ -151,7 +162,19 @@ func _UpdateWallVisibility(zidx : int, tposition : Vector2, wall : int) -> void:
 func is_dirty() -> bool:
 	return _dirty
 
-func zone_count() -> int:
+func get_class() -> String:
+	return "ZoneMapData"
+
+func get_rect() -> Rect2:
+	var rect : Rect2 = Rect2()
+	for zone in _Map:
+		if rect.has_no_area():
+			rect = zone.rect
+		else:
+			rect = rect.merge(zone.rect)
+	return rect
+
+func get_zone_count() -> int:
 	return _Map.size()
 
 func add_zone(f : int, c : int) -> void:
@@ -163,22 +186,54 @@ func add_zone(f : int, c : int) -> void:
 			"tiles":{}
 		}
 		for i in range(_Map.size()):
-			var dim = _GetZoneDimension(i)
+			var dim = get_zone_dimensions(i)
 			if dim.height > 0:
 				if dim["floor"] > f:
-					_Map.insert(0 if i == 0 else i - 1, zone)
-					_SetDirty()
+					var nzidx : int = 0 if i == 0 else i - 1
+					_Map.insert(nzidx, zone)
+					_dirty = true
+					emit_signal("zone_added", nzidx)
+					emit_changed()
 					return
 		_Map.append(zone)
-		_SetDirty()
+		_dirty = true
+		emit_signal("zone_added", _Map.size() - 1)
+		emit_changed()
 
 func remove_zone(zidx : int) -> void:
 	if zidx >= 0 and zidx < _Map.size():
 		_Map.remove(zidx)
-		_SetDirty()
+		_dirty = true
+		emit_signal("zone_removed", zidx)
+		emit_changed()
 
+func get_zone_rect(zidx : int) -> Rect2:
+	if zidx >= 0 and zidx < _Map.size():
+		return _Map[zidx].rect
+	return Rect2()
 
-func add_tile(zidx : int, position : Vector2) -> void:
+func get_zone_dimensions(zidx : int):
+	if zidx >= 0 and zidx < _Map.size():
+		return {
+			"floor": _Map[zidx]["floor"],
+			"ceiling": _Map[zidx]["ceiling"],
+			"height": _Map[zidx]["ceiling"] - _Map[zidx]["floor"]
+		}
+	return null
+
+func get_zone_index_at(x : int, y : int) -> int:
+	return get_zone_index_atv(Vector2(x, y))
+
+func get_zone_index_atv(position : Vector2) -> int:
+	for i in range(_Map.size()):
+		if position in _Map[i].tiles:
+			return i
+	return -1
+
+func add_tile(zidx : int, x : int, y : int) -> void:
+	add_tilev(zidx, Vector2(x, y))
+
+func add_tilev(zidx : int, position : Vector2) -> void:
 	if zidx >= 0 and zidx < _Map.size():
 		if _GetOverlappingZoneNear(zidx, position) >= 0:
 			return
@@ -197,10 +252,51 @@ func add_tile(zidx : int, position : Vector2) -> void:
 			]
 		}
 		zone.tiles[position] = tile
-		#tile.w[0].c = not _TilePositionOverlaps(zidx, position + Vector2.UP)
-		#tile.w[1].c = not _TilePositionOverlaps(zidx, position + Vector2.RIGHT)
-		#tile.w[2].c = not _TilePositionOverlaps(zidx, position + Vector2.DOWN)
-		#tile.w[3].c = not _TilePositionOverlaps(zidx, position + Vector2.LEFT)
+		var trect : Rect2 = Rect2(position, Vector2(1,1))
+		if zone.rect.has_no_area():
+			zone.rect = trect
+		else:
+			zone.rect = zone.rect.merge(trect)
+		_UpdateWallVisibility(zidx, position, WALL_FACE.North)
+		_UpdateWallVisibility(zidx, position, WALL_FACE.East)
+		_UpdateWallVisibility(zidx, position, WALL_FACE.South)
+		_UpdateWallVisibility(zidx, position, WALL_FACE.West)
+		_dirty = true
+		emit_changed()
+
+func remove_tile(zidx : int, x : int, y : int) -> void:
+	remove_tilev(zidx, Vector2(x, y))
+
+func remove_tilev(zidx : int, position : Vector2) -> void:
+	if zidx >= 0 and zidx < _Map.size():
+		if position in _Map[zidx].tiles:
+			_Map[zidx].tiles.erase(position)
+			_UpdateWallVisibility(zidx, position, WALL_FACE.North)
+			_UpdateWallVisibility(zidx, position, WALL_FACE.East)
+			_UpdateWallVisibility(zidx, position, WALL_FACE.South)
+			_UpdateWallVisibility(zidx, position, WALL_FACE.West)
+			_RecalculateZoneRect(zidx)
+			_dirty = true
+			emit_changed()
+
+func zone_has_tile_at(zidx : int, x: int, y: int) -> bool:
+	return zone_has_tile_atv(zidx, Vector2(x, y))
+
+func zone_has_tile_atv(zidx : int, tposition : Vector2) -> bool:
+	if zidx >= 0 and zidx < _Map.size():
+		return tposition in _Map[zidx].tiles
+	return false
+
+func get_zone_tile_count(zidx : int) -> int:
+	if zidx >= 0 and zidx < _Map.size():
+		return _Map[zidx].tiles.keys().size()
+	return 0
+
+func get_tile_count() -> int:
+	var count : int = 0
+	for i in range(_Map.size()):
+		count += _Map[i].tiles.keys().size()
+	return count
 
 func get_zone_tile_wall_collidable(zidx : int, tposition : Vector2, wall : int) -> bool:
 	if zidx >= 0 and zidx < _Map.size() and WALL_FACE.keys().find(wall) >= 0:
@@ -210,13 +306,51 @@ func get_zone_tile_wall_collidable(zidx : int, tposition : Vector2, wall : int) 
 			return zone.tiles[tposition].w[wall].c
 	return false
 
+func get_zone_tile_wall_surface(zidx : int, tposition : Vector2, wall : int) -> int:
+	if zidx >= 0 and zidx < _Map.size() and WALL_FACE.keys().find(wall) >= 0:
+		var zone = _Map[zidx]
+		tposition = tposition.floor()
+		if tposition in zone.tiles:
+			return zone.tiles[tposition].w[wall].tid
+	return -1
+
+func get_zone_tile_wall_offset(zidx : int, tposition : Vector2, wall : int, sec : int) -> int:
+	if zidx >= 0 and zidx < _Map.size() and WALL_FACE.keys().find(wall) >= 0:
+		var zone = _Map[zidx]
+		tposition = tposition.floor()
+		if tposition in zone.tiles:
+			var tile = zone.tiles[tposition]
+			match sec:
+				WALL_SEC.Middle:
+					return tile.w[wall].o[0]
+				WALL_SEC.Top:
+					return tile.w[wall].o[1]
+				WALL_SEC.Bottom:
+					return tile.w[wall].o[2]
+	return -1
+
+func get_zone_tile_wall_definition(zidx : int, tposition : Vector2, wall : int):
+	if zidx >= 0 and zidx < _Map.size() and WALL_FACE.keys().find(wall) >= 0:
+		var zone = _Map[zidx]
+		tposition = tposition.floor()
+		if tposition in zone.tiles:
+			return {
+				"collision": zone.tiles[tposition].w[wall].c,
+				"surface_id": zone.tiles[tposition].w[wall].tid,
+				"offset_middle": zone.tiles[tposition].w[wall].o[0],
+				"offset_top": zone.tiles[tposition].w[wall].o[1],
+				"offset_bottom": zone.tiles[tposition].w[wall].o[2]
+			}
+	return null
+
 func set_zone_tile_wall_collidable(zidx : int, tposition : Vector2, wall : int, enable : bool = true) -> void:
 	if zidx >= 0 and zidx < _Map.size() and WALL_FACE.keys().find(wall) >= 0:
 		var zone = _Map[zidx]
 		tposition = tposition.floor()
 		if tposition in zone.tiles:
 			zone.tiles[tposition].w[wall].c = enable
-			_SetDirty()
+			_dirty = true
+			emit_changed()
 
 func set_zone_tile_wall_surface(zidx : int, tposition : Vector2, wall : int, tid : int) -> void:
 	if zidx >= 0 and zidx < _Map.size() and WALL_FACE.keys().find(wall) >= 0:
@@ -225,7 +359,8 @@ func set_zone_tile_wall_surface(zidx : int, tposition : Vector2, wall : int, tid
 			tposition = tposition.floor()
 			if tposition in zone.tiles:
 				zone.tiles[tposition].w[wall].tid = tid
-				_SetDirty()
+				_dirty = true
+				emit_changed()
 
 func set_zone_tile_wall_offset(zidx : int, tposition : Vector2, wall : int, sec : int, offset : int) -> void:
 	if zidx >= 0 and zidx < _Map.size() and WALL_FACE.keys().find(wall) >= 0:
@@ -233,24 +368,23 @@ func set_zone_tile_wall_offset(zidx : int, tposition : Vector2, wall : int, sec 
 		tposition = tposition.floor()
 		if tposition in zone.tiles and zone.tiles[tposition].w[wall].tid >= 0:
 			var zwall = zone.tiles[tposition].w[wall]
-			var dirty = false
 			if sec == WALL_SEC.Middle or sec == WALL_SEC.Full:
 				if zwall.o[0] >= 0:
 					zwall.o[0] = offset
-					dirty = true
+					_dirty = true
 			
 			if sec == WALL_SEC.Top or sec == WALL_SEC.Edges or sec == WALL_SEC.Full:
 				if zwall.o[1] >= 0:
 					zwall.o[1] = offset
-					dirty = true
+					_dirty = true
 			
 			if sec == WALL_SEC.Bottom or sec == WALL_SEC.Edges or sec == WALL_SEC.Full:
 				if zwall.o[2] >= 0:
 					zwall.o[2] = offset
-					dirty = true
+					_dirty = true
 			
-			if dirty:
-				_SetDirty()
+			if _dirty:
+				emit_changed()
 
 # -----------------------------------------------------------------------------
 # Handler Methods

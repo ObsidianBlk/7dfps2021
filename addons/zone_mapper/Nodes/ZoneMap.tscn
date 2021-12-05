@@ -2,8 +2,5 @@
 
 [ext_resource path="res://addons/zone_mapper/Nodes/ZoneMap.gd" type="Script" id=1]
 
-[node name="World" type="Spatial"]
-
-[node name="ZoneMap" type="StaticBody" parent="."]
+[node name="ZoneMap" type="StaticBody"]
 script = ExtResource( 1 )
-zone_map_data = null

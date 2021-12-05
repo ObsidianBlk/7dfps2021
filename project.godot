@@ -9,12 +9,18 @@
 config_version=4
 
 _global_script_classes=[ {
+"base": "StaticBody",
+"class": "ZoneMap",
+"language": "GDScript",
+"path": "res://addons/zone_mapper/Nodes/ZoneMap.gd"
+}, {
 "base": "Resource",
 "class": "ZoneMapData",
 "language": "GDScript",
 "path": "res://addons/zone_mapper/Classes/Resources/ZoneMapData.gd"
 } ]
 _global_script_class_icons={
+"ZoneMap": "",
 "ZoneMapData": ""
 }
 
@@ -23,6 +29,10 @@ _global_script_class_icons={
 config/name="7dfps2021"
 run/main_scene="res://World.tscn"
 config/icon="res://icon.png"
+
+[editor_plugins]
+
+enabled=PoolStringArray( "res://addons/zone_mapper/plugin.cfg" )
 
 [physics]
 
