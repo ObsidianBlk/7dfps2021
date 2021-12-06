@@ -1,0 +1,24 @@
+[gd_resource type="Environment" format=2]
+
+[resource]
+background_mode = 1
+ambient_light_color = Color( 0.658824, 0.219608, 0.698039, 1 )
+ambient_light_energy = 0.71
+tonemap_mode = 4
+tonemap_exposure = 1.15
+auto_exposure_max_luma = 4.0
+auto_exposure_speed = 6.65
+ssao_enabled = true
+ssao_radius = 6.63
+ssao_intensity = 11.87
+ssao_intensity2 = 0.0
+ssao_bias = 0.001
+ssao_color = Color( 0.827451, 0, 1, 1 )
+dof_blur_far_enabled = true
+dof_blur_near_enabled = true
+glow_enabled = true
+glow_intensity = 0.35
+glow_bloom = 0.23
+glow_blend_mode = 0
+glow_hdr_threshold = 0.5
+glow_hdr_scale = 1.0
