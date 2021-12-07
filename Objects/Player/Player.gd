@@ -13,8 +13,8 @@ export var gravity : float = 12
 # -------------------------------------------------------------------------
 var velocity : Vector3 = Vector3()
 
-var _grounded = false
-var _jumped = false
+var _grounded : bool = false
+var _jumped : bool = false
 var _is = {
 	"l":0, "r": 0, "f": 0, "b": 0, "axis": Vector2()
 }
