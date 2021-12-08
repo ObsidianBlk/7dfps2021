@@ -90,7 +90,11 @@ func _AI_Search(_delta : float) -> void:
 	if not _body:
 		_state = STATE.Idle
 		return
-	rotation_degrees.y += _delta * 5
+	var t : Transform = get_transform()
+	t = t.looking_at(_body.global_transform.origin, Vector3.UP)
+	transform.basis.z = transform.basis.z.linear_interpolate(t.basis.z, 0.2)
+	print(transform.basis.z)
+	#transform.basis.z = lerp(transform.basis.z, t.basis.z, 0.2)
 
 func _AI_Scout(_delta : float) -> void:
 	pass
