@@ -17,8 +17,8 @@ onready var player_node : KinematicBody = get_node("Player")
 # Override Methods
 # -------------------------------------------------------------------------
 func _ready() -> void:
-	#_LoadLevel(INITIAL_LEVEL)
-	_LoadLevel(LEVEL1)
+	_LoadLevel(INITIAL_LEVEL)
+	#_LoadLevel(LEVEL1)
 
 # -------------------------------------------------------------------------
 # Private Methods

@@ -10,8 +10,9 @@ signal body_exited(body)
 # -------------------------------------------------------------------------
 # Export Variables
 # -------------------------------------------------------------------------
-export var fov_range : float = 10.0			setget set_fov_range
-export var fov_radius : float = 10.0		setget set_fov_radius
+export var fov_range : float = 10.0				setget set_fov_range
+export var fov_inner_radius : float = 2.0		setget set_fov_inner_radius
+export var fov_outer_radius : float = 10.0		setget set_fov_outer_radius
 
 # -------------------------------------------------------------------------
 # Variables
@@ -35,9 +36,15 @@ func set_fov_range(r : float) -> void:
 			collisionshape_node.shape.points = _BuildCone()
 			sightcheck_ray.cast_to = Vector3(0, 0, fov_range)
 
-func set_fov_radius(r : float) -> void:
+func set_fov_inner_radius(r : float) -> void:
+	if r >= 0:
+		fov_inner_radius = r
+		if _rdy:
+			collisionshape_node.shape.points = _BuildCone()
+
+func set_fov_outer_radius(r : float) -> void:
 	if r > 0:
-		fov_radius = r
+		fov_outer_radius = r
 		if _rdy:
 			collisionshape_node.shape.points = _BuildCone()
 
@@ -53,10 +60,17 @@ func _ready() -> void:
 # Private Methods
 # -------------------------------------------------------------------------
 func _BuildCone() -> Array:
-	var points = [Vector3()]
 	var dangle = deg2rad(45.0)
+	var points = []
+	if fov_inner_radius < 0.01:
+		points.append(Vector3())
+	else:
+		for i in range(8):
+			var v = Vector2(0, 1).rotated(i * dangle) * fov_inner_radius
+			points.append(Vector3(v.x, v.y, 0.0))
+		
 	for i in range(8):
-		var v = Vector2(0, 1).rotated(i * dangle) * fov_radius
+		var v = Vector2(0, 1).rotated(i * dangle) * fov_outer_radius
 		points.append(Vector3(v.x, v.y, fov_range))
 	return points
 
