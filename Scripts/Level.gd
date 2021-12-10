@@ -73,6 +73,14 @@ func _GiveEnemiesNavigation() -> void:
 		if child.has_method("set_navigation"):
 			child.set_navigation(navigation_node)
 
+func _GiveEnemiesAnObserver(observer : Spatial) -> void:
+	if not enemy_container_node:
+		print("WARNING: Missing enemy container node.")
+		return
+	for child in enemy_container_node.get_children():
+		if child.has_method("set_observer"):
+			child.set_observer(observer) 
+
 
 # -------------------------------------------------------------------------
 # Public Methods
@@ -90,6 +98,7 @@ func attach_player(player : Spatial) -> void:
 		parent.remove_child(player)
 	player_container_node.add_child(player)
 	player.global_transform.origin = player_start_node.global_transform.origin
+	_GiveEnemiesAnObserver(player)
 
 
 func detach_player(container : Spatial) -> void:

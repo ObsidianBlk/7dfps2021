@@ -43,6 +43,7 @@ var _nav_altered : bool = false
 # -------------------------------------------------------------------------
 # Onready Variables
 # -------------------------------------------------------------------------
+onready var sprite_node = get_node("DoomSprite3D")
 onready var hearing_area_node : Area = get_node("Hearing_Area")
 onready var hearing_area_shape : CollisionShape = get_node("Hearing_Area/CollisionShape")
 onready var fov_node = get_node("FOV")
@@ -87,6 +88,12 @@ func _ready() -> void:
 	_nav_position = global_transform.origin
 	
 	if not Engine.editor_hint:
+		sprite_node.add_animation_set("idle", 1, 1, true, [0, 5, 10, 15, 20])
+		sprite_node.add_animation_set("walk", 4, 12, true, [0, 5, 10, 15, 20])
+		sprite_node.add_animation_set("attack", 2, 12, true, [25, 30, 35, 40, 45])
+		sprite_node.add_animation_set("pain", 1, 12, false, [50, 51, 52, 53, 54])
+		sprite_node.add_animation_set("die", 5, 12, true, [55])
+		
 		hearing_area_node.connect("body_entered", self, "_on_BodySensed", [SENSE.Hearing])
 		hearing_area_node.connect("body_exited", self, "_on_BodySenseLost", [SENSE.Hearing])
 	
@@ -107,7 +114,7 @@ func _physics_process(delta : float) -> void:
 	if Engine.editor_hint:
 		return
 	
-	_AI(delta)
+	#_AI(delta)
 	velocity = _CalculateVelocity(delta)
 	
 	var snap = Vector3()
@@ -268,6 +275,9 @@ func _AI_Attack(_delta : float) -> void:
 # -------------------------------------------------------------------------
 func set_navigation(nav : Navigation) -> void:
 	navigator_node.set_navigation_node(nav)
+
+func set_observer(observer : Spatial) -> void:
+	sprite_node.set_observer(observer)
 
 
 # -------------------------------------------------------------------------
