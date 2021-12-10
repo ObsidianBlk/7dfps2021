@@ -20,10 +20,9 @@ export var fov_range : float = 10.0				setget set_fov_range
 export var fov_inner_radius : float = 2.0		setget set_fov_inner_radius
 export var fov_outer_radius : float = 10.0		setget set_fov_outer_radius
 export var hearing_radius : float = 20.0		setget set_hearing_radius
-export var turn_speed : float = 50.0
+export var turn_speed : float = 180.0
 export var jump_force : float = 8.0
-export var acceleration : float = 80.0
-export var friction : float = 0.2
+export var speed : float = 120.0
 export var gravity : float = 12
 
 # -------------------------------------------------------------------------
@@ -38,7 +37,8 @@ var _state : int = STATE.Idle
 var _body : Spatial = null
 var _body_sense : int = 0
 
-var _move_to_position : Vector3 = Vector3()
+var _nav_position : Vector3 = Vector3()
+var _nav_altered : bool = false
 
 # -------------------------------------------------------------------------
 # Onready Variables
@@ -84,7 +84,7 @@ func set_hearing_radius(r : float) -> void:
 # Override Methods
 # -------------------------------------------------------------------------
 func _ready() -> void:
-	_move_to_position = global_transform.origin
+	_nav_position = global_transform.origin
 	
 	if not Engine.editor_hint:
 		hearing_area_node.connect("body_entered", self, "_on_BodySensed", [SENSE.Hearing])
@@ -92,6 +92,8 @@ func _ready() -> void:
 	
 		fov_node.connect("body_entered", self, "_on_BodySensed", [SENSE.Sight])
 		fov_node.connect("body_exited", self, "_on_BodySenseLost", [SENSE.Sight])
+		
+		navigator_node.connect("path_altered", self, "_on_nav_path_altered")
 	else:
 		set_physics_process(false)
 	
@@ -106,19 +108,12 @@ func _physics_process(delta : float) -> void:
 		return
 	
 	_AI(delta)
-	var dv = _CalculateDeltaVelocity(delta)
+	velocity = _CalculateVelocity(delta)
 	
 	var snap = Vector3()
-	if not _grounded:
-		dv.y = -gravity * delta
-	elif _jumped:
-		_jumped = false
-		dv.y = jump_force
-	else:
+	if _grounded or not _jumped:
 		snap = Vector3.DOWN
 	
-	var drag = velocity * Vector3(friction, 0.0, friction)
-	velocity += dv - drag
 	velocity = move_and_slide_with_snap(velocity, snap, Vector3.UP, true)
 	_grounded = is_on_floor()
 
@@ -135,15 +130,23 @@ func _AngleToFace(position : Vector3, unsigned : bool = false) -> float:
 		return abs(angle)
 	return angle
 
-func _CalculateDeltaVelocity(delta : float) -> Vector3:
+func _CalculateVelocity(delta : float) -> Vector3:
 	var base : Vector3 = Vector3()
 	if not _IsNearNavPosition():
-		if _AngleToFace(_move_to_position, true) > deg2rad(1.0):
+		if _AngleToFace(_nav_position, true) > deg2rad(1.0):
 			#print("Facing")
-			_LookAt(_move_to_position, delta)
+			_LookAt(_nav_position, delta)
 		else:
 			base = global_transform.basis.z
-	return base * acceleration * delta
+	base *= speed * delta
+	
+	if not _grounded:
+		base.y = velocity.y - (gravity * delta)
+	elif _jumped:
+		_jumped = false
+		base.y = jump_force
+	
+	return base
 
 func _FaceAngle(angle : float, inDeg : bool = false) -> void:
 	if inDeg:
@@ -170,14 +173,14 @@ func _LookTo(dir : Vector3, delta : float) -> void:
 		rotation.y += max_turn_angle * turn_right
 
 func _GetNextNavPosition() -> void:
-	_move_to_position = navigator_node.next_position()
-	if abs(_move_to_position.y - global_transform.origin.y) < 0.3:
-		_move_to_position.y = global_transform.origin.y
+	_nav_position = navigator_node.next_position()
+	if abs(_nav_position.y - global_transform.origin.y) < 0.3:
+		_nav_position.y = global_transform.origin.y
 
 func _IsNearNavPosition() -> bool:
-	if global_transform.origin.distance_to(_move_to_position) < 1.0:
+	if global_transform.origin.distance_to(_nav_position) < 1.0:
 		var pos = Vector2(global_transform.origin.x, global_transform.origin.z)
-		var mpos = Vector2(_move_to_position.x, _move_to_position.z)
+		var mpos = Vector2(_nav_position.x, _nav_position.z)
 		if pos.distance_to(mpos) < DISTANCE_THRESHOLD:
 			return true
 	return false
@@ -236,21 +239,24 @@ func _AI_Scout(_delta : float) -> void:
 	if _IsNearNavPosition():
 		if not navigator_node.end_of_path():
 			_GetNextNavPosition()
+		elif _CanHear():
+			_state = STATE.Search
+		else:
+			_state = STATE.Idle
 		
 
 func _AI_Chase(_delta : float) -> void:
-	print("Can Sense: ", _CanSense(), " | Can See: ", _CanSee())
 	if not _CanSense() or not _CanSee():
 		navigator_node.set_target(null)
 		if navigator_node.end_of_path():
-			_move_to_position = global_transform.origin
-			_state == STATE.Search if _CanHear() else STATE.Idle
+			_nav_position = global_transform.origin
+			_state = STATE.Search if _CanHear() else STATE.Idle
 		else:
 			_state = STATE.Scout
+		return
 	
-	#print ("Dist to Body: ", _body.global_transform.origin.distance_to(global_transform.origin))
-	#print ("Dist To Pos: ", global_transform.origin.distance_to(_move_to_position), " | From: ", global_transform.origin, " | To: ", _move_to_position)
-	if _IsNearNavPosition():
+	if _IsNearNavPosition() or _nav_altered:
+		_nav_altered = false
 		_GetNextNavPosition()
 
 func _AI_Attack(_delta : float) -> void:
@@ -282,5 +288,6 @@ func _on_BodySenseLost(body : Spatial, sense : int) -> void:
 			_body = null
 	#print("Sense (lost): ", _body_sense)
 
-
+func _on_nav_path_altered() -> void:
+	_nav_altered = true
 

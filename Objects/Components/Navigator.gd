@@ -1,6 +1,11 @@
 extends Node
 
 # -----------------------------------------------------------------------------------------------
+# Signals
+# -----------------------------------------------------------------------------------------------
+signal path_altered
+
+# -----------------------------------------------------------------------------------------------
 # Export Variables
 # -----------------------------------------------------------------------------------------------
 export var distance_threshold : float = 0.02	setget set_distance_threshold
@@ -32,8 +37,12 @@ func set_distance_threshold(d : float) -> void:
 # Override Methods
 # -----------------------------------------------------------------------------------------------
 func _ready() -> void:
-	timer_node.connect("timeout", self, "_on_heartbeat")
-	timer_node.start()
+	pass
+	#timer_node.connect("timeout", self, "_on_heartbeat")
+	#timer_node.start()
+
+func _process(delta : float) -> void:
+	_UpdateNavPath()
 
 # -----------------------------------------------------------------------------------------------
 # Private Methods
@@ -59,12 +68,11 @@ func _UpdateNavPath() -> void:
 	if not target:
 		return
 	
-	print("Nav Distance: ", target.global_transform.origin.distance_to(last_target_position))
 	if target.global_transform.origin.distance_to(last_target_position) > distance_threshold:
-		print("Last Pos: ", last_target_position, " | Current Pos: ", target.global_transform.origin)
 		last_target_position = target.global_transform.origin
 		nav_path = nav_node.get_simple_path(position, last_target_position)
 		nav_path_index = 0 if nav_path.size() > 0 else -1
+		emit_signal("path_altered")
 
 # -----------------------------------------------------------------------------------------------
 # Public Methods
