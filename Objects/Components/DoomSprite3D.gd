@@ -1,6 +1,12 @@
 extends Sprite3D
 
 # ------------------------------------------------------------------------------------------------
+# Signals
+# ------------------------------------------------------------------------------------------------
+signal animation_complete(animation_name)
+signal animation_looping(animation_name)
+
+# ------------------------------------------------------------------------------------------------
 # Constants and ENUMs
 # ------------------------------------------------------------------------------------------------
 enum ANGLE {All=0, Forward=0, FLeft=1, Left=2, BLeft=3, Backward=4, FRight=5, Right=6, BRight=7}
@@ -14,7 +20,7 @@ var _anim : Dictionary = {}
 var _active_anim : String = ""
 var _active_angle : int = ANGLE.All
 var _frame : int = -1
-var _dtime : int = 0
+var _dtime : float = 0
 
 # ------------------------------------------------------------------------------------------------
 # Override Methods
@@ -29,7 +35,6 @@ func _process(delta : float) -> void:
 		return
 
 	_AngleFromObserver()
-	#print("Active Angle: ", _active_angle)
 	var offset = _GetAnimOffset(_active_anim, _active_angle)
 	if offset < 0:
 		return
@@ -40,8 +45,15 @@ func _process(delta : float) -> void:
 		_dtime -= _anim[_active_anim].duration
 		advance += 1
 	if advance > 0:
-		_frame += advance
-		_frame = _frame % _anim[_active_anim].frames
+		if _anim[_active_anim].loop:
+			_frame += advance
+			if _frame >= _anim[_active_anim].frames:
+				emit_signal("animation_looping", _active_anim)
+			_frame = _frame % _anim[_active_anim].frames
+		else:
+			_frame = min(_anim[_active_anim].frames - 1, _frame + advance)
+			if _frame == _anim[_active_anim].frames - 1:
+				emit_signal("animation_complete", _active_anim)
 	
 	if offset + _frame < hframes * vframes:
 		frame = offset + _frame
@@ -93,6 +105,7 @@ func add_animation_set(anim_name : String, frames: int, fps : float, loop : bool
 		"fps":fps,
 		"duration": 1.0 / float(fps),
 		"frames":frames,
+		"loop": loop,
 		"offset":{}
 	}
 	if offsets.size() > 0:
@@ -119,6 +132,8 @@ func set_animation_angle_offset(anim_name : String, angle : int, offset : int) -
 func set_observer(observer : Spatial) -> void:
 	_observer = observer
 
+func get_current_animation() -> String:
+	return _active_anim
 
 func animate(anim_name: String) -> void:
 	if anim_name in _anim:

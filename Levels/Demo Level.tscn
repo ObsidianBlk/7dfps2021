@@ -43,6 +43,9 @@ environment = ExtResource( 3 )
 
 [node name="Enemy" parent="Enemy_Container" instance=ExtResource( 4 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2.1423, -6.50772 )
+setup/facing = 0.0
+senses/fov/inner_radius = 2.0
+senses/fov/range = 10.0
 
 [node name="Player_Start" type="Position3D" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 6.09088, 1.55187, 0.298797 )
