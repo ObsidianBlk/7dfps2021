@@ -1,0 +1,68 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://GDVar/Theme/GDVar.theme" type="Theme" id=1]
+[ext_resource path="res://GDVar/Components/GDVarMessages.tscn" type="PackedScene" id=2]
+[ext_resource path="res://GDVar/Components/GDVarInterpreter.tscn" type="PackedScene" id=3]
+[ext_resource path="res://GDVar/GDVarTerminal.gd" type="Script" id=4]
+
+[node name="GDVarTerminal" type="PanelContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_right = 163.0
+margin_bottom = 66.0
+theme = ExtResource( 1 )
+script = ExtResource( 4 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+config/action_name = ""
+config/auto_log_command = true
+config/auto_log_color = Color( 1, 0.8, 0, 1 )
+theme_overrides/styles/messages = null
+theme_overrides/styles/command = null
+config/start_hidden = true
+config/scale_width = 1.0
+config/scale_height = 1.0
+animation/slide_out = true
+animation/edge = 2
+animation/anchor = 0
+animation/duration = 0.25
+
+[node name="Tween" type="Tween" parent="."]
+
+[node name="Messenger" type="VBoxContainer" parent="."]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 1017.0
+margin_bottom = 593.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_constants/separation = 0
+
+[node name="Messages" type="PanelContainer" parent="Messenger"]
+margin_right = 1010.0
+margin_bottom = 548.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="GDVarMessages" parent="Messenger/Messages" instance=ExtResource( 2 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 1003.0
+margin_bottom = 541.0
+
+[node name="Commands" type="PanelContainer" parent="Messenger"]
+margin_top = 548.0
+margin_right = 1010.0
+margin_bottom = 586.0
+size_flags_horizontal = 3
+
+[node name="GDVarInterpreter" parent="Messenger/Commands" instance=ExtResource( 3 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 1003.0
+margin_bottom = 31.0

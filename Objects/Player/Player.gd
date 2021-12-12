@@ -13,6 +13,7 @@ export var gravity : float = 12
 # Variables
 # -------------------------------------------------------------------------
 var alive : bool = true
+var paused : bool = false
 var velocity : Vector3 = Vector3()
 
 var _grounded : bool = false
@@ -20,6 +21,8 @@ var _jumped : bool = false
 var _is = {
 	"l":0, "r": 0, "f": 0, "b": 0, "axis": Vector2()
 }
+
+var _terminal_node : Control = null
 
 var _enemy : Spatial = null
 
@@ -39,6 +42,12 @@ func set_max_health(h : float) -> void:
 	if health_node:
 		health_node.max_health = h
 
+func set_terminal_node(n : Control) -> void:
+	if _terminal_node == null and n.has_method("toggle"):
+		_terminal_node = n
+		_terminal_node.connect("term_visible", self, "_on_terminal_viz_changed", [true])
+		_terminal_node.connect("term_hidden", self, "_on_terminal_viz_changed", [false])
+
 # -------------------------------------------------------------------------
 # Override Methods
 # -------------------------------------------------------------------------
@@ -54,9 +63,10 @@ func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 func _unhandled_input(event) -> void:
-	# TODO: Menu request event or quit event...
+	if event.is_action_pressed("terminal") and _terminal_node != null:
+		_terminal_node.toggle()
 	
-	if not alive:
+	if not alive or paused:
 		return
 	
 	if event is InputEventMouseMotion:
@@ -108,6 +118,9 @@ func _unhandled_input(event) -> void:
 				h.hurt(5)
 
 func _physics_process(delta : float) -> void:
+	if paused:
+		return
+	
 	_ProcessJoypadLook()
 	var dv = _CalculateDeltaVelocity(delta)
 	
@@ -161,6 +174,16 @@ func is_alive() -> bool:
 # -------------------------------------------------------------------------
 # Handler Methods
 # -------------------------------------------------------------------------
+func _on_terminal_viz_changed(term_visible : bool) -> void:
+	if term_visible:
+		paused = true
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	else:
+		paused = false
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		
+
+
 func _on_enemy_entered(body : Spatial) -> void:
 	if _enemy == null and body.is_in_group("Enemy"):
 		_enemy = body

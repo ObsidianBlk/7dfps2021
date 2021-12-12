@@ -1,12 +1,19 @@
 extends Spatial
 
 # -------------------------------------------------------------------------
+# Signals
+# -------------------------------------------------------------------------
+signal level_change(next_level_src)
+
+# -------------------------------------------------------------------------
 # Export Variables
 # -------------------------------------------------------------------------
 export var enemy_container_path : NodePath = ""
 export var player_container_path : NodePath = ""
 export var navigation_path : NodePath = ""
 export var player_start_path : NodePath = ""
+export var reset_depth : float = 20.0
+export (String, FILE) var next_level_src = ""
 
 # -------------------------------------------------------------------------
 # Variables
@@ -15,6 +22,8 @@ var enemy_container_node : Spatial = null
 var player_container_node : Spatial = null
 var navigation_node : Navigation = null
 var player_start_node : Position3D = null
+
+var _player : Spatial = null
 
 # -------------------------------------------------------------------------
 # Setters
@@ -56,6 +65,11 @@ func _ready() -> void:
 	set_navigation_path(navigation_path)
 	set_player_start_path(player_start_path)
 	_GiveEnemiesNavigation()
+
+func _process(_delta : float) -> void:
+	if _player != null:
+		if _player.global_transform.origin.y <= -reset_depth:
+			_player.global_transform.origin = player_start_node.global_transform.origin
 
 # -------------------------------------------------------------------------
 # Private Methods
@@ -99,6 +113,7 @@ func attach_player(player : Spatial) -> void:
 	player_container_node.add_child(player)
 	player.global_transform.origin = player_start_node.global_transform.origin
 	_GiveEnemiesAnObserver(player)
+	_player = player
 
 
 func detach_player(container : Spatial) -> void:
@@ -111,6 +126,10 @@ func detach_player(container : Spatial) -> void:
 		if child.is_in_group("Player"):
 			player_container_node.remove_child(child)
 			container.add_child(child)
+
+
+func call_next_level() -> void:
+	emit_signal("level_change", next_level_src)
 
 # -------------------------------------------------------------------------
 # Handler Methods

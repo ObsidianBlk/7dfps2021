@@ -1,0 +1,35 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://GDVar/GDVarWatcher.gd" type="Script" id=1]
+[ext_resource path="res://GDVar/Components/GDVarWatch.tscn" type="PackedScene" id=2]
+
+[node name="GDVarWatcher" type="PanelContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+config/start_hidden = true
+config/scale_width = 1.0
+config/scale_height = 1.0
+animation/slide_out = true
+animation/edge = 2
+animation/anchor = 0
+animation/duration = 0.25
+
+[node name="Tween" type="Tween" parent="."]
+
+[node name="PC" type="PanelContainer" parent="."]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 1017.0
+margin_bottom = 593.0
+
+[node name="GDVarWatch" parent="PC" instance=ExtResource( 2 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 1003.0
+margin_bottom = 579.0

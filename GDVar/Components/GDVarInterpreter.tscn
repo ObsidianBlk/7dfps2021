@@ -1,0 +1,25 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://GDVar/Components/GDVarInterpreter.gd" type="Script" id=1]
+
+[node name="GDVarInterpreter" type="HBoxContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 3
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Label" type="Label" parent="."]
+margin_top = 293.0
+margin_right = 73.0
+margin_bottom = 307.0
+text = "Command: "
+
+[node name="Cmd" type="LineEdit" parent="."]
+margin_left = 77.0
+margin_right = 1024.0
+margin_bottom = 600.0
+size_flags_horizontal = 3
+placeholder_text = "Enter command here"
