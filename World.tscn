@@ -26,6 +26,7 @@ __meta__ = {
 margin_left = 512.0
 margin_right = 1024.0
 margin_bottom = 300.0
+config/action_name = "terminal"
 config/auto_log_command = false
 config/scale_width = 0.5
 config/scale_height = 0.5

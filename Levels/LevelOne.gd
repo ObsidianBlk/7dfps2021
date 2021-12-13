@@ -1,9 +1,15 @@
 extends "res://Scripts/Level.gd"
 
 # -------------------------------------------------------------------------
-# Export Variables
+# Constants
 # -------------------------------------------------------------------------
-
+const RESET_MESSAGES = [
+	"Really? You had to take a swan dive?",
+	"You realize you can't fly, right?",
+	"Have a nice trip? See you next fall!",
+	"Honestly, friend, there's nothing down there.",
+	"Down, down, down... you just fell DOWN!"
+]
 
 # -------------------------------------------------------------------------
 # Variables
@@ -14,11 +20,14 @@ var _passcode : String = ""
 # Onready Variables
 # -------------------------------------------------------------------------
 onready var pads_container_node : Spatial = get_node("Pads")
+onready var msgcube_node : Spatial = get_node("Decorations/MessageCube")
 
 # -------------------------------------------------------------------------
 # Override Methods
 # -------------------------------------------------------------------------
 func _ready() -> void:
+	connect("player_attached", self, "_on_player_attached")
+	connect("player_position_reset", self, "_on_player_pos_reset")
 	GDVarCtrl.define_command({
 		name = "passcode",
 		description = "Find the passcode and you'll be able to exit the level!",
@@ -29,6 +38,7 @@ func _ready() -> void:
 		]
 	})
 	_GeneratePasscode()
+	AudioCtrl.play_music_track("Moonlight")
 	call_deferred("_InitialMessage")
 
 
@@ -77,8 +87,15 @@ func _CMD_ExitLevel() -> void:
 # -------------------------------------------------------------------------
 func _InitialMessage() -> void:
 	var messages : PoolStringArray = PoolStringArray([
-		"Greetings there you strange person you!\n",
 		"Welcome to [color=#22AA22][i][b]TermLiminal[/b][/i][/color]!\n",
+		"Where one foolish developers lack of 3D skills lead to a three day ",
+		"battle with Blender (which he lost) and another loss of two days ",
+		"following a rabbit hole of an idea before finally realizing it wasn't ",
+		"worth the time... has lead to this hobbled together idea!\n",
+		"\n",
+		"That little chime you heard when the level started was an indicator that ",
+		"a new message is available here in the terminal! So come check it out, if ",
+		"you hear it again!\n",
 		"\n",
 		"To progress, you're going to need a passcode! Look for the glowing ",
 		"areas. When you step on one, you'll get a message here in the terminal ",
@@ -86,7 +103,9 @@ func _InitialMessage() -> void:
 		"\n",
 		"There are four digits to find. Once you have them, enter them like...\n",
 		"[color=#AA8800][i]passcode(\"1234\")[/i][/color]\n",
-		"... of course, the passcode isn't \"1234\". That would be... silly!"
+		"... of course, the passcode isn't \"1234\". That would be... silly!\n",
+		"\n",
+		"Oh! I also left a few of my friends hangin about. They should be easy enough to avoid..."
 	])
 	GDVarCtrl.info(messages.join(""))
 	AudioCtrl.play_sfx("res://Assets/Audio/SFX/terminal_chime.wav")
@@ -132,4 +151,18 @@ func _UpdatePads() -> void:
 # -------------------------------------------------------------------------
 # Handler Methods
 # -------------------------------------------------------------------------
+func _on_player_attached() -> void:
+	_player.connect("dead", self, "_on_player_dead")
 
+
+func _on_player_pos_reset() -> void:
+	var rng = RandomNumberGenerator.new()
+	rng.randomize()
+	var idx = rng.randi_range(0, RESET_MESSAGES.size() - 1)
+	msgcube_node.text = RESET_MESSAGES[idx]
+
+
+func _on_player_dead() -> void:
+	msgcube_node.text = "Ha! One of my baddies got ya! That's funny!"
+	_player.global_transform.origin = player_start_node.global_transform.origin
+	_player.revive()

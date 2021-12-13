@@ -46,10 +46,86 @@ func _ready() -> void:
 	_fade_tween = Tween.new()
 	add_child(_track_timer)
 	add_child(_fade_tween)
+	
+	_ExposeAudioCtrlToGDVar()
+
+# -------------------------------------------------------------------------
+# GDVar Command Methods
+# -------------------------------------------------------------------------
+func _CMD_GetVolume() -> void:
+	var v_master = get_bus_volume(BUS.MASTER)
+	var v_sfx = get_bus_volume(BUS.SFX)
+	var v_music = get_bus_volume(BUS.MUSIC)
+	GDVarCtrl.info("Master: [b][color=#AA8800]%s[/color][/b]" % [v_master * 100])
+	GDVarCtrl.info("SFX: [b][color=#AA8800]%s[/color][/b]" % [v_sfx * 100])
+	GDVarCtrl.info("Music: [b][color=#AA8800]%s[/color][/b]" % [v_music * 100])
+
+func _CMD_SetVolume(bus : String, volume : float) -> void:
+	bus = bus.to_lower()
+	volume = max(0.0, min(1.0, volume / 100.0))
+	match bus:
+		"master":
+			set_bus_volume(BUS.MASTER, volume)
+		"sfx":
+			set_bus_volume(BUS.SFX, volume)
+		"music":
+			set_bus_volume(BUS.MUSIC, volume)
+		_:
+			GDVarCtrl.error("No audio bus named '[i][color=#aa8800]%s[/color][/i]'." % [bus])
+
+func _CMD_ListMusicTracks() -> void:
+	if _Music.empty():
+		GDVarCtrl.info("There are currently [b]no[/b] music tracks available.")
+	else:
+		for track in _Music.keys():
+			GDVarCtrl.info("[i]%s[/i]" % [track])
 
 # -------------------------------------------------------------------------
 # Private Methods
 # -------------------------------------------------------------------------
+func _ExposeAudioCtrlToGDVar() -> void:
+	if GDVarCtrl:
+		GDVarCtrl.define_command({
+			name = "get_volume",
+			description = "Discover the current audio volumes.",
+			owner = self,
+			method = "_CMD_GetVolume"
+		})
+		GDVarCtrl.define_command({
+			name = "set_volume",
+			description = "Set the volume for one of the audio busses.",
+			owner = self,
+			method = "_CMD_SetVolume",
+			args = [
+				{"name":"bus", "type":TYPE_STRING},
+				{"name":"level", "type":TYPE_REAL}
+			]
+		})
+		GDVarCtrl.define_command({
+			name = "list_music_tracks",
+			description = "List the available music tracks.",
+			owner = self,
+			method = "_CMD_ListMusicTracks"
+		})
+		GDVarCtrl.define_command({
+			name = "play_random_music_track",
+			description = "Play a random track from the available music tracks.",
+			owner = self,
+			method = "play_random_music_track"
+		})
+		GDVarCtrl.define_command({
+			name = "play_music_track",
+			description = "Play the given music track.",
+			owner = self,
+			method = "play_music_track",
+			args = [
+				{"name":"track_name", "type":TYPE_STRING}
+			]
+		})
+	else:
+		call_deferred("_ExposeAudioCtrlToGDVar")
+
+
 func _wrapi(low : int, high : int, v :int) -> int:
 	if v < low:
 		return high
@@ -96,7 +172,8 @@ func play_music_track(music_name : String) -> void:
 	if music_name in _Music and music_name != _current_music_track:
 		if music_node.stream == null:
 			_Play(music_name)
-		elif not music_node.playing:
+		#elif not music_node.playing:
+		else:
 			if not _track_timer.is_stopped():
 				_track_timer.stop()
 				_on_track_delay_timeout()

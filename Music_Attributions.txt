@@ -1,0 +1,19 @@
+Track: Moonlight
+Song: Cyberpunk Moonlight Sonata v2
+Author: Joth
+Source: https://opengameart.org/content/cyberpunk-moonlight-sonata
+
+Track: LinesOfCode
+Song: Lines of Code
+Author: Trevor Lentz
+Source: https://opengameart.org/content/lines-of-code
+
+Track: StreetUrchins
+Song: Cyber Street Urchans
+Author: Eric Matyas
+Source: https://opengameart.org/content/cyber-street-urchins-looping
+
+Track: Arcade3
+Song: Cyberpunk Arcade 3
+Author: Eric Matyas
+Source: https://opengameart.org/content/cyberpunk-arcade-3-looping

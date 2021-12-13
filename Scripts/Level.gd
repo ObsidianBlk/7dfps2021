@@ -4,6 +4,8 @@ extends Spatial
 # Signals
 # -------------------------------------------------------------------------
 signal level_change(next_level_src)
+signal player_attached()
+signal player_position_reset()
 
 # -------------------------------------------------------------------------
 # Export Variables
@@ -70,6 +72,7 @@ func _process(_delta : float) -> void:
 	if _player != null:
 		if _player.global_transform.origin.y <= -reset_depth:
 			_player.global_transform.origin = player_start_node.global_transform.origin
+			emit_signal("player_position_reset")
 
 # -------------------------------------------------------------------------
 # Private Methods
@@ -114,6 +117,7 @@ func attach_player(player : Spatial) -> void:
 	player.global_transform.origin = player_start_node.global_transform.origin
 	_GiveEnemiesAnObserver(player)
 	_player = player
+	call_deferred("emit_signal", "player_attached")
 
 
 func detach_player(container : Spatial) -> void:

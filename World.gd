@@ -2,6 +2,7 @@ extends Spatial
 
 const INITIAL_LEVEL = "res://Levels/Demo Level.tscn"
 const LEVEL1 = "res://Levels/Level One.tscn"
+const LEVEL2 = "res://Levels/Level Two.tscn"
 
 # -------------------------------------------------------------------------
 # Variables
@@ -24,6 +25,18 @@ func _ready() -> void:
 		owner = self,
 		method = "_CMD_Quit"
 	})
+	GDVarCtrl.define_command({
+		name = "about_music",
+		description = "Get your musical attributions right here!",
+		owner = self,
+		method = "_CMD_AboutMusic"
+	})
+	
+	AudioCtrl.add_music_track("Moonlight", "res://Assets/Audio/Music/Cyberpunk Moonlight Sonata v2.ogg")
+	AudioCtrl.add_music_track("Arcade3", "res://Assets/Audio/Music/cyberpunk_arcade_3.ogg")
+	AudioCtrl.add_music_track("StreetUrchins", "res://Assets/Audio/Music/cyber_street_urchins.ogg")
+	AudioCtrl.add_music_track("LinesOfCode", "res://Assets/Audio/Music/Lines of Code.ogg")
+	AudioCtrl.set_bus_volume(AudioCtrl.BUS.MUSIC, 0.5)
 	player_node.set_terminal_node(terminal_node)
 	#_LoadLevel(INITIAL_LEVEL)
 	_LoadLevel(LEVEL1)
@@ -33,6 +46,31 @@ func _ready() -> void:
 # -------------------------------------------------------------------------
 func _CMD_Quit() -> void:
 	get_tree().quit()
+
+func _CMD_AboutMusic() -> void:
+	var msg = [
+		"Track: [i][b]Moonlight[/b][/i]\n",
+		"Song: [i][b]Cyberpunk Moonlight Sonata v2[/b][/i]\n",
+		"Author: [i][b]Joth[/b][/i]\n",
+		"Source: [url]https://opengameart.org/content/cyberpunk-moonlight-sonata[/url]\n",
+		"\n",
+		"Track: [i][b]LinesOfCode[/b][/i]\n",
+		"Song: [i][b]Lines of Code[/b][/i]\n",
+		"Author: [i][b]Trevor Lentz[/b][/i]\n",
+		"Source: [url]https://opengameart.org/content/lines-of-code[/url]\n",
+		"\n",
+		"Track: [i][b]StreetUrchins[/b][/i]\n",
+		"Song: [i][b]Cyber Street Urchans[/b][/i]\n",
+		"Author: [i][b]Eric Matyas[/b][/i]\n",
+		"Source: [url]https://opengameart.org/content/cyber-street-urchins-looping[/url]\n",
+		"\n",
+		"Track: [i][b]Arcade3[/b][/i]\n",
+		"Song: [i][b]Cyberpunk Arcade 3[/b][/i]\n",
+		"Author: [i][b]Eric Matyas[/b][/i]\n",
+		"Source: [url]https://opengameart.org/content/cyberpunk-arcade-3-looping[/url]\n"
+	]
+	GDVarCtrl.call_command("clear_messages")
+	GDVarCtrl.info(PoolStringArray(msg).join(""))
 
 # -------------------------------------------------------------------------
 # Private Methods

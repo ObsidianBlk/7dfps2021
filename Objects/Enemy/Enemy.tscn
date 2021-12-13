@@ -16,7 +16,7 @@ height = 1.3
 [sub_resource type="CubeMesh" id=4]
 
 [sub_resource type="SphereShape" id=3]
-radius = 20.0
+radius = 5.0
 
 [sub_resource type="CubeMesh" id=5]
 size = Vector3( 0.1, 1.6, 0.1 )
@@ -49,14 +49,18 @@ vframes = 12
 transform = Transform( 1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0.9, 0 )
 shape = SubResource( 1 )
 
-[node name="Facing" type="MeshInstance" parent="."]
+[node name="FacingArrow" type="Spatial" parent="."]
+
+[node name="Facing" type="MeshInstance" parent="FacingArrow"]
 transform = Transform( 0.1, 0, 0, 0, -4.37114e-09, -0.1, 0, 0.1, -4.37114e-09, 0, 0.305, 0.343 )
 mesh = SubResource( 2 )
+skeleton = NodePath("../..")
 material/0 = null
 
-[node name="Facing2" type="MeshInstance" parent="."]
+[node name="Facing2" type="MeshInstance" parent="FacingArrow"]
 transform = Transform( 0.1, 0, 0, 0, -4.37114e-09, -0.1, 0, 0.1, -4.37114e-09, 0, 0.305, -0.343 )
 mesh = SubResource( 4 )
+skeleton = NodePath("../..")
 material/0 = null
 
 [node name="Hearing_Area" type="Area" parent="."]
@@ -84,3 +88,5 @@ shape = SubResource( 6 )
 
 [node name="Health" type="Node" parent="."]
 script = ExtResource( 6 )
+
+[node name="Audio" type="AudioStreamPlayer3D" parent="."]

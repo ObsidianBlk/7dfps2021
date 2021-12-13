@@ -32,7 +32,8 @@ _global_script_class_icons={
 
 [application]
 
-config/name="7dfps2021"
+config/name="TermLiminal [7dfps2021]"
+config/description="TermLiminal - Made over 7 days for the 7 Day First Person Shooter jam, Dec. 2021"
 run/main_scene="res://World.tscn"
 config/icon="res://icon.png"
 

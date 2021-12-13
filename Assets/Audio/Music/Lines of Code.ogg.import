@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/Lines of Code.ogg-e2162f065e30db1f4bf0d3b28098237e.oggstr"
+
+[deps]
+
+source_file="res://Assets/Audio/Music/Lines of Code.ogg"
+dest_files=[ "res://.import/Lines of Code.ogg-e2162f065e30db1f4bf0d3b28098237e.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

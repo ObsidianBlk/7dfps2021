@@ -1,13 +1,25 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=8 format=2]
 
 [ext_resource path="res://Levels/LevelOne.gd" type="Script" id=1]
 [ext_resource path="res://Assets/Meshes/MapMeshLibrary.meshlib" type="MeshLibrary" id=2]
 [ext_resource path="res://Objects/MessageCube/MessageCube.tscn" type="PackedScene" id=3]
 [ext_resource path="res://Objects/Pads/Pad.tscn" type="PackedScene" id=4]
+[ext_resource path="res://Levels/navmesh_settings.tres" type="NavigationMesh" id=5]
+[ext_resource path="res://Objects/Enemy/Enemy.tscn" type="PackedScene" id=6]
 
-[sub_resource type="NavigationMesh" id=1]
-agent/radius = 0.2
-agent/max_climb = 2.0
+[sub_resource type="Environment" id=2]
+background_mode = 1
+background_color = Color( 0.12549, 0.164706, 0.054902, 1 )
+ambient_light_color = Color( 0.407843, 1, 0, 1 )
+tonemap_mode = 4
+auto_exposure_enabled = true
+auto_exposure_scale = 0.15
+auto_exposure_max_luma = 2.0
+dof_blur_far_distance = 45.0
+dof_blur_far_transition = 0.4
+glow_enabled = true
+glow_intensity = 0.5
+glow_blend_mode = 0
 
 [node name="Level One" type="Spatial"]
 script = ExtResource( 1 )
@@ -15,12 +27,12 @@ enemy_container_path = NodePath("Enemy_Container")
 player_container_path = NodePath("Player_Container")
 navigation_path = NodePath("Navigation")
 player_start_path = NodePath("Player_Start")
-next_level_src = "res://Levels/Demo Level.tscn"
+next_level_src = "res://Levels/Level Two.tscn"
 
 [node name="Navigation" type="Navigation" parent="."]
 
 [node name="NavigationMeshInstance" type="NavigationMeshInstance" parent="Navigation"]
-navmesh = SubResource( 1 )
+navmesh = ExtResource( 5 )
 
 [node name="GridMap" type="GridMap" parent="Navigation/NavigationMeshInstance"]
 mesh_library = ExtResource( 2 )
@@ -33,6 +45,25 @@ __meta__ = {
 }
 
 [node name="Enemy_Container" type="Spatial" parent="."]
+
+[node name="Enemy" parent="Enemy_Container" instance=ExtResource( 6 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 42.8831, -9.53674e-07, -4.9433 )
+senses/hearing_radius = 5.0
+
+[node name="Enemy2" parent="Enemy_Container" instance=ExtResource( 6 )]
+transform = Transform( -1, 0, -1.50996e-07, 0, 1, 0, 1.50996e-07, 0, -1, -12.5006, -1.8329, -22.6554 )
+setup/facing = 180.0
+senses/hearing_radius = 5.0
+
+[node name="Enemy3" parent="Enemy_Container" instance=ExtResource( 6 )]
+transform = Transform( -1, 0, -1.50996e-07, 0, 1, 0, 1.50996e-07, 0, -1, 31.2027, -4, -35.0232 )
+setup/facing = 180.0
+senses/hearing_radius = 5.0
+
+[node name="Enemy4" parent="Enemy_Container" instance=ExtResource( 6 )]
+transform = Transform( 0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 69.1137, -6, 23.1099 )
+setup/facing = 45.0
+senses/hearing_radius = 5.0
 
 [node name="Player_Container" type="Spatial" parent="."]
 
@@ -49,12 +80,19 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.24898, 0 )
 
 [node name="Pad1" parent="Pads" instance=ExtResource( 4 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 26.9582, 0.0469241, 2.94381 )
+one_shot = false
 
 [node name="Pad2" parent="Pads" instance=ExtResource( 4 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -7.33577, -1.87726, -16.8524 )
+one_shot = false
 
 [node name="Pad3" parent="Pads" instance=ExtResource( 4 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 23.0208, -5.95235, 2.97216 )
+one_shot = false
 
 [node name="Pad4" parent="Pads" instance=ExtResource( 4 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 63.0086, -3.99547, 7.00581 )
+one_shot = false
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource( 2 )

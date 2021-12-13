@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/cyberpunk_arcade_3.ogg-5912e3eaa9cc592b70e626cb0ed02f40.oggstr"
+
+[deps]
+
+source_file="res://Assets/Audio/Music/cyberpunk_arcade_3.ogg"
+dest_files=[ "res://.import/cyberpunk_arcade_3.ogg-5912e3eaa9cc592b70e626cb0ed02f40.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

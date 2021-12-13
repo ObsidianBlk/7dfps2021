@@ -63,7 +63,13 @@ func set_immortal(enable : bool) -> void:
 	if health > 0:
 		immortal = enable
 
+func is_immortal() -> bool:
+	return immortal
+
 func is_alive() -> bool:
 	return health > 0
+
+func reset() -> void:
+	health = max_health
 
 

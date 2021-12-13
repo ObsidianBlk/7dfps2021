@@ -51,6 +51,6 @@ func _on_gui_input(event : InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		cmd_node.release_focus()
 	if action_name != "":
-		if cmd_node.has_focus() and event.is_action_pressed("terminal"):
+		if cmd_node.has_focus() and event.is_action_pressed(action_name):
 			cmd_node.text = ""
 			emit_signal("close_request")

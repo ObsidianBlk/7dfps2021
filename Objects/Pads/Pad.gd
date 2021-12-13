@@ -1,6 +1,11 @@
 extends Spatial
 
 # -------------------------------------------------------------------------
+# Signals
+# -------------------------------------------------------------------------
+signal pad_triggered()
+
+# -------------------------------------------------------------------------
 # Export Variables
 # -------------------------------------------------------------------------
 export var message : String = ""
@@ -27,13 +32,16 @@ func _ready() -> void:
 # Private Methods
 # -------------------------------------------------------------------------
 func _SendMessage() -> void:
-	if clear_messages:
-		GDVarCtrl.call_command("clear_messages")
-	GDVarCtrl.info(message)
-	if chime_on_trigger:
-		AudioCtrl.play_sfx("res://Assets/Audio/SFX/terminal_chime.wav")
+	print("Sending message: ", message)
+	if message != "":
+		if clear_messages:
+			GDVarCtrl.call_command("clear_messages")
+		GDVarCtrl.info(message)
+		if chime_on_trigger:
+			AudioCtrl.play_sfx("res://Assets/Audio/SFX/terminal_chime.wav")
+	emit_signal("pad_triggered")
 	if one_shot:
-		_die()
+		call_deferred("_die")
 
 func _die() -> void:
 	var parent = get_parent()

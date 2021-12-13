@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/locked.wav-d54a1cbf8d81a25286da63126133d208.sample"
+
+[deps]
+
+source_file="res://Assets/Audio/SFX/Enemy/locked.wav"
+dest_files=[ "res://.import/locked.wav-d54a1cbf8d81a25286da63126133d208.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

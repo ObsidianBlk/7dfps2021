@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/cyber_street_urchins.ogg-36ab24df4ca131c3bc89f5e4bb2fbf49.oggstr"
+
+[deps]
+
+source_file="res://Assets/Audio/Music/cyber_street_urchins.ogg"
+dest_files=[ "res://.import/cyber_street_urchins.ogg-36ab24df4ca131c3bc89f5e4bb2fbf49.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

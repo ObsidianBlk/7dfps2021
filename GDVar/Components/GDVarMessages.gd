@@ -19,6 +19,7 @@ var _messages : Array = []
 # Onready Variables
 # -----------------------------------------------------------------------------
 onready var messages_node : VBoxContainer = get_node("Scroll/Messages")
+onready var scroll_node : ScrollContainer = get_node("Scroll")
 
 # -----------------------------------------------------------------------------
 # Setters / Getters
@@ -96,6 +97,7 @@ func _ThemeLabel(type : int, lbl : RichTextLabel) -> void:
 		lbl.add_stylebox_override("focus", style)
 		lbl.add_color_override("default_color", color)
 
+
 # -----------------------------------------------------------------------------
 # Public Methods
 # -----------------------------------------------------------------------------
@@ -119,6 +121,9 @@ func _on_gdvar_message(type : int , msg : String) -> void:
 	lbl.bbcode_text = msg
 	_ThemeLabel(type, lbl)
 	_CleanMessages()
+	yield(get_tree(), "idle_frame")
+	scroll_node.ensure_control_visible(lbl)
+
 
 func _on_meta_clicked(meta) -> void:
 	if typeof(meta) == TYPE_STRING:

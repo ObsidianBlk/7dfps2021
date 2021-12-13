@@ -2,6 +2,13 @@ extends KinematicBody
 tool
 
 # -------------------------------------------------------------------------
+# Signals
+# -------------------------------------------------------------------------
+signal dead()
+signal hear_player()
+signal see_player()
+
+# -------------------------------------------------------------------------
 # Constants and ENUMs
 # -------------------------------------------------------------------------
 enum STATE {Idle, Search, Scout, Chase, Attack, Hurt, Dead}
@@ -11,6 +18,11 @@ enum SENSE {Hearing=1, Sight=2}
 
 const FACING_ANGLE_THRESHOLD = deg2rad(2.5)
 const DISTANCE_THRESHOLD = 1.5
+
+var SFX_SEARCHING = preload("res://Assets/Audio/SFX/Enemy/searching.wav")
+var SFX_LOCKED = preload("res://Assets/Audio/SFX/Enemy/locked.wav")
+var SFX_HURT = preload("res://Assets/Audio/SFX/Enemy/hurt.wav")
+var SFX_DEAD = preload("res://Assets/Audio/SFX/Enemy/dead.wav")
 
 # -------------------------------------------------------------------------
 # Property Variables
@@ -30,6 +42,8 @@ var gravity : float = 12
 # Variables
 # -------------------------------------------------------------------------
 var velocity : Vector3 = Vector3()
+
+var _start_position : Vector3 = Vector3()
 
 var _jumped : bool = false
 var _grounded : bool = false
@@ -52,6 +66,8 @@ onready var fov_node = get_node("FOV")
 onready var navigator_node = get_node("Navigator")
 onready var attackarea_node : Area = get_node("AttackArea")
 onready var health_node : Health = get_node("Health")
+
+onready var audio : AudioStreamPlayer3D = get_node("Audio")
 
 # -------------------------------------------------------------------------
 # Setters
@@ -96,7 +112,10 @@ func _ready() -> void:
 	_nav_position = global_transform.origin
 	
 	if not Engine.editor_hint:
+		_start_position = global_transform.origin
+		
 		set_max_health(max_health)
+		$FacingArrow.visible = false
 		
 		health_node.connect("dead", self, "_on_dead")
 		health_node.connect("hurt", self, "_on_hurt")
@@ -453,23 +472,47 @@ func get_health() -> Health:
 func is_alive() -> bool:
 	return _state != STATE.Dead
 
+func reset() -> void:
+	velocity = Vector3()
+
+	_jumped = false
+	_grounded = false
+
+	_state = STATE.Idle
+	_body = null
+	_body_sense = 0
+	_body_attackable = false
+
+	_nav_position = _start_position
+	_nav_altered = false
+	
+	health_node.reset()
+	global_transform.origin = _start_position
+
 # -------------------------------------------------------------------------
 # Handler Methods
 # -------------------------------------------------------------------------
 func _on_BodySensed(body : Spatial, sense : int) -> void:
-	if body.is_in_group("Player"):
+	if body.is_in_group("Player") and _state != STATE.Dead:
 		if _body == null:
 			_body = body
+			if sense == SENSE.Hearing:
+				audio.stream = SFX_SEARCHING
+			elif sense == SENSE.Sight:
+				audio.stream = SFX_LOCKED
+			audio.play()
 		if _body == body:
 			_body_sense = _body_sense | sense
-	#print("Sense (gain): ", _body_sense)
+			if sense == SENSE.Hearing:
+				emit_signal("hear_player")
+			elif sense == SENSE.Sight:
+				emit_signal("see_player")
 
 func _on_BodySenseLost(body : Spatial, sense : int) -> void:
 	if body.is_in_group("Player") and body == _body:
 		_body_sense = _body_sense & (~sense)
 		if _body_sense == 0:
 			_body = null
-	#print("Sense (lost): ", _body_sense)
 
 func _on_nav_path_altered() -> void:
 	_nav_altered = true
@@ -498,6 +541,11 @@ func _on_sprite_anim_complete(anim_name : String) -> void:
 func _on_hurt(amount : float) -> void:
 	if _state != STATE.Dead:
 		_state = STATE.Hurt
+		audio.stream = SFX_HURT
+		audio.play()
 
 func _on_dead(health : float, mhealth : float) -> void:
 	_state = STATE.Dead
+	audio.stream = SFX_DEAD
+	audio.play()
+	emit_signal("dead")
